@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LabTrack - Professional Edition</title>
+<meta name="description" content="Laboratory Attendance Management System">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+    /* --- CSS VARIABLES & THEME --- */
+    :root {
+        --primary: #0F5132;
+        --primary-hover: #0a3622;
+        --primary-light: #d1fae5;
+        --accent: #198754;
+        --secondary: #7c3aed; /* Sub-admin color */
+        --secondary-light: #ede9fe;
+        --danger: #DC3545;
+        --danger-light: #fee2e2;
+        --bg-body: #F3F4F6;
+        --bg-card: #FFFFFF;
+        --text-main: #1F2937;
+        --text-muted: #6B7280;
+        --border: #E5E7EB;
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --transition: all 0.2s ease-in-out;
+    }
+
+    /* --- RESET & BASE --- */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-body); color: var(--text-main); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+    
+    /* --- UTILITIES --- */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-4 { gap: 1rem; }
+    .text-sm { font-size: 0.875rem; }
+    .font-bold { font-weight: 700; }
+    .text-primary { color: var(--primary); }
+    .text-danger { color: var(--danger); }
+
+    /* --- LAYOUT --- */
+    .container { max-width: 1280px; margin: 0 auto; padding: 20px; width: 100%; flex: 1; }
+    
+    /* --- LOADER --- */
+    #loader-overlay {
+        position: fixed; inset: 0; background: white; z-index: 9999;
+        display: flex; justify-content: center; align-items: center; flex-direction: column;
+        transition: opacity 0.5s ease;
+    }
+    .spinner {
+        width: 40px; height: 40px; border: 4px solid var(--border);
+        border-top: 4px solid var(--primary); border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* --- HEADER --- */
+    header { background: var(--bg-card); padding: 24px; text-align: center; border-bottom: 4px solid var(--primary); border-radius: var(--radius-md); box-shadow: var(--shadow-md); margin-bottom: 24px; }
+    .unit-name { font-size: 0.9rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+    .doc-title { font-size: 1.75rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+    .course-info { background-color: var(--primary-light); color: var(--primary); padding: 4px 16px; border-radius: 20px; font-weight: 600; display: inline-block; font-size: 0.9rem; }
+
+    /* --- TABS --- */
+    .tabs { display: flex; background: #E5E7EB; padding: 6px; border-radius: var(--radius-md); margin-bottom: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+    .tab-btn { flex: 1; padding: 12px; border: none; background: transparent; cursor: pointer; border-radius: var(--radius-sm); font-weight: 600; color: var(--text-muted); transition: var(--transition); font-size: 0.95rem; }
+    .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.5); }
+    .tab-btn.active { color: white; box-shadow: var(--shadow-sm); }
+    .tab-btn.active.student-tab { background: #2563EB; }
+    .tab-btn.active.monitor-tab { background: var(--primary); }
+    .tab-btn.active.subadmin-tab { background: var(--secondary); }
+
+    /* --- CARDS & FORMS --- */
+    .card { background: var(--bg-card); border-radius: var(--radius-md); padding: 24px; box-shadow: var(--shadow-md); border: 1px solid var(--border); animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .form-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: var(--text-main); }
+    input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 1rem; transition: var(--transition); background: #fff; }
+    input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+    
+    /* --- BUTTONS --- */
+    .btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 20px; border: none; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: var(--transition); width: 100%; font-size: 0.95rem; gap: 8px; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: var(--secondary); color: white; }
+    .btn-secondary:hover { background: #6d28d9; }
+    .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); width: auto; padding: 8px 16px; }
+    .btn-outline:hover { background-color: var(--bg-body); border-color: var(--text-muted); }
+    .btn-danger-outline { background: white; border: 1px solid var(--danger); color: var(--danger); width: auto; padding: 8px 16px; }
+    .btn-danger-outline:hover { background-color: var(--danger-light); }
+    .btn-link { background: none; border: none; color: var(--accent); text-decoration: underline; width: auto; padding: 0; cursor: pointer; }
+    .btn-sm { padding: 6px 12px; font-size: 0.85rem; width: auto; }
+
+    /* --- RADIO BUTTONS --- */
+    .radio-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+    .radio-option input[type="radio"] { position: absolute; opacity: 0; height: 0; width: 0; }
+    .radio-option label { display: flex; align-items: center; justify-content: center; padding: 14px; background: white; border: 2px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; color: var(--text-muted); transition: var(--transition); text-align: center; margin: 0; }
+    .radio-option input[type="radio"]:checked + label { background: var(--primary); color: white; border-color: var(--primary); box-shadow: var(--shadow-sm); }
+    .radio-option input[type="radio"]:disabled + label { background-color: #F3F4F6; color: #9CA3AF; cursor: not-allowed; border-color: var(--border); }
+
+    /* --- TOGGLE CARDS (Dashboard) --- */
+    .controls-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; max-height: 300px; overflow-y: auto; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: #F9FAFB; }
+    .toggle-card { background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px 8px; text-align: center; cursor: pointer; transition: var(--transition); user-select: none; }
+    .toggle-card:hover { border-color: var(--primary); }
+    .toggle-card.active { background-color: var(--primary-light); border-color: var(--primary); color: #064E3B; font-weight: 700; box-shadow: var(--shadow-sm); }
+    .toggle-card.inactive { background-color: #F3F4F6; border-color: #E5E7EB; color: #9CA3AF; text-decoration: line-through; opacity: 0.7; }
+
+    /* --- TABLES --- */
+    .table-container { overflow-x: auto; margin-top: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 800px; }
+    th { background-color: #F9FAFB; color: var(--text-muted); font-weight: 600; text-align: left; padding: 14px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background-color: #F9FAFB; }
+
+    /* --- LISTS (Subadmin/Submissions) --- */
+    .list-item { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 12px; box-shadow: var(--shadow-sm); transition: var(--transition); }
+    .list-item:hover { border-color: var(--primary); transform: translateX(4px); }
+
+    /* --- MODALS --- */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: flex; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(4px); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-box { background: white; padding: 32px; border-radius: var(--radius-lg); width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); text-align: center; transform: scale(0.95); transition: transform 0.3s; }
+    .modal-overlay.open .modal-box { transform: scale(1); }
+    .modal-icon { font-size: 3rem; margin-bottom: 16px; display: block; }
+    
+    /* --- TOASTS --- */
+    #toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
+    .toast { background: white; padding: 16px 20px; border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); border-left: 4px solid var(--primary); animation: slideIn 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); max-width: 350px; font-size: 0.9rem; }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.success { border-left-color: var(--success); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* --- SWITCH TOGGLE --- */
+    .switch { position: relative; display: inline-block; width: 48px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; inset: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    /* --- NOTICE BOX --- */
+    .notice-display { background: #FFFBEB; color: #92400E; border: 1px solid #FCD34D; padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; animation: slideDown 0.4s ease; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* --- STATS --- */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-top: 20px; }
+    .stat-box { background: white; padding: 20px; border-radius: var(--radius-sm); text-align: center; border: 1px solid var(--border); border-bottom: 4px solid var(--primary); }
+    .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary); line-height: 1; margin-bottom: 4px; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+
+    @media (max-width: 640px) {
+        .container { padding: 10px; }
+        .card { padding: 16px; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .btn { width: 100%; }
+        .header-content { flex-direction: column; gap: 10px; }
+    }
+</style>
+</head>
+<body>
+
+<!-- PRELOADER -->
+<div id="loader-overlay">
+    <div class="spinner"></div>
+    <p style="margin-top: 15px; font-weight: 500; color: var(--text-muted);">Initializing LabTrack...</p>
+</div>
+
+<header>
+    <div class="unit-name">Chemistry Laboratory</div>
+    <div class="doc-title">LabTrack Practical Attendance</div>
+    <div class="course-info">CHM 107 Session 2025/2026</div>
+</header>
+
+<div class="container">
+    <!-- Navigation Tabs -->
+    <div class="tabs">
+        <button class="tab-btn student-tab active" id="tab-student" onclick="Actions.switchTab('student')">Student Login</button>
+        <button class="tab-btn subadmin-tab" id="tab-subadmin" onclick="Actions.switchTab('subadmin')">Sub-Admin</button>
+        <button class="tab-btn monitor-tab" id="tab-monitor" onclick="Actions.switchTab('monitor')">Chief Technologist</button>
+    </div>
+
+    <!-- STUDENT VIEW -->
+    <section id="student-view" class="card">
+        <div id="student-notice-display" class="notice-display hidden">
+            <span style="font-size: 1.2rem;">📢</span>
+            <span id="notice-text"></span>
+        </div>
+
+        <div class="flex justify-between items-center" style="margin-bottom: 20px;">
+            <h2 style="color: var(--primary);">Student Sign-In</h2>
+            <div style="background: var(--primary-light); color: var(--primary); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">Available Sessions Active</div>
+        </div>
+
+        <form id="attendanceForm" onsubmit="event.preventDefault(); Actions.submitAttendance();">
+            <div class="form-group">
+                <label for="studentID">Matric Number</label>
+                <input type="text" id="studentID" placeholder="e.g., Anau/25/0001" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="studentName">Full Name</label>
+                <input type="text" id="studentName" placeholder="e.g., Adamu Ibrahim" required autocomplete="name">
+            </div>
+            <div class="form-group">
+                <label for="department">Department</label>
+                <select id="department" required>
+                    <option value="" disabled selected>Loading...</option>
+                </select>
+                <p id="dept-error" class="hidden text-danger text-sm" style="margin-top: 6px;">No departments currently allowed.</p>
+            </div>
+            <div class="form-group">
+                <label>Select Practical Attempt</label>
+                <p class="text-sm text-muted" style="margin-bottom: 10px;">Note: Attendance can only be recorded once per session.</p>
+                <div class="radio-group">
+                    <div class="radio-option">
+                        <input type="radio" name="practicalNum" id="p1" value="1" required>
+                        <label for="p1">Practical 1</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="practicalNum" id="p2" value="2">
+                        <label for="p2">Practical 2</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="practicalNum" id="p3" value="3">
+                        <label for="p3">Practical 3</label>
+                    </div>
+                    <div class="radio-option">
+                        <input type="radio" name="practicalNum" id="p4" value="4">
+                        <label for="p4">Practical 4</label>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Attendance</button>
+        </form>
+    </section>
+
+    <!-- SUB-ADMIN VIEW -->
+    <section id="subadmin-view" class="card hidden">
+        <div class="flex justify-between items-center" style="margin-bottom: 20px; flex-wrap: wrap; gap:10px;">
+            <h2 style="color: var(--secondary);">Verification Portal</h2>
+            <button class="btn btn-secondary" style="width: auto;" onclick="Actions.submitReport()">Submit Report</button>
+        </div>
+
+        <!-- Filters -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; background: #F3F4F6; padding: 16px; border-radius: var(--radius-md);">
+            <div>
+                <label>Search (Name/Matric)</label>
+                <input type="text" id="subAdminSearch" placeholder="Type to search..." oninput="Debounce.renderDashboard('subadmin')">
+            </div>
+            <div>
+                <label>Department</label>
+                <select id="subAdminDept" onchange="Actions.renderDashboard('subadmin')"><option value="all">All Allowed Depts</option></select>
+            </div>
+            <div>
+                <label>Practical Session</label>
+                <select id="subAdminSession" onchange="Actions.renderDashboard('subadmin')">
+                    <option value="all">All Sessions</option>
+                    <option value="1">Practical 1</option>
+                    <option value="2">Practical 2</option>
+                    <option value="3">Practical 3</option>
+                    <option value="4">Practical 4</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="subadminTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Matric No.</th>
+                        <th>Name</th>
+                        <th>Dept</th>
+                        <th>Sess</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="attendanceTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- CHIEF TECHNOLOGIST VIEW -->
+    <section id="monitor-view" class="card hidden">
+        <div class="flex justify-between items-center" style="margin-bottom: 24px; flex-wrap: wrap; gap: 15px;">
+            <h2 style="color: var(--primary);">Chief Technologist Dashboard</h2>
+            <div class="flex gap-2" style="flex-wrap: wrap;">
+                <button class="btn btn-outline" onclick="Actions.openResetModal()">Reset Password</button>
+                <button class="btn btn-outline" onclick="Actions.downloadCSV()">Download CSV</button>
+                <button class="btn btn-danger-outline" onclick="Actions.clearData()">Clear All Data</button>
+            </div>
+        </div>
+
+        <!-- Settings Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 24px;">
+            
+            <!-- Sub-Admin Management -->
+            <div style="background: #eff6ff; padding: 16px; border-radius: var(--radius-sm); border: 1px solid #bfdbfe;">
+                <h3 class="text-primary" style="margin-bottom: 12px; font-size: 1rem;">Manage Assistants</h3>
+                <div id="subadmin-list"></div>
+            </div>
+
+            <!-- Submissions -->
+            <div style="background: #f0fdf4; padding: 16px; border-radius: var(--radius-sm); border: 1px solid #bbf7d0;">
+                <h3 class="text-primary" style="margin-bottom: 12px; font-size: 1rem;">Recent Reports</h3>
+                <div id="submissions-list"></div>
+            </div>
+        </div>
+
+        <!-- Notice Board -->
+        <div class="form-group" style="background: #fffbeb; padding: 16px; border-radius: var(--radius-sm); border: 1px solid #fcd34d; margin-bottom: 24px;">
+            <label style="color: #92400E;">Post Notice to Students</label>
+            <div class="flex gap-2">
+                <input type="text" id="adminNoticeInput" placeholder="Enter announcement..." style="background: white;">
+                <button class="btn btn-primary" style="width: auto; background: #D97706;" onclick="Actions.updateNotice()">Post</button>
+            </div>
+        </div>
+
+        <!-- Toggles -->
+        <div style="margin-bottom: 20px;">
+            <div class="flex justify-between items-center" style="margin-bottom: 10px;">
+                <h3 style="font-size: 1rem;">Practical Sessions</h3>
+            </div>
+            <div class="controls-grid" style="max-height: none; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="toggle-card" id="toggle-p1" onclick="Actions.toggleSession(1)">
+                    <div class="font-bold">Practical 1</div>
+                    <div class="toggle-status text-sm" id="status-p1">OPEN</div>
+                </div>
+                <div class="toggle-card" id="toggle-p2" onclick="Actions.toggleSession(2)">
+                    <div class="font-bold">Practical 2</div>
+                    <div class="toggle-status text-sm" id="status-p2">OPEN</div>
+                </div>
+                <div class="toggle-card" id="toggle-p3" onclick="Actions.toggleSession(3)">
+                    <div class="font-bold">Practical 3</div>
+                    <div class="toggle-status text-sm" id="status-p3">OPEN</div>
+                </div>
+                <div class="toggle-card" id="toggle-p4" onclick="Actions.toggleSession(4)">
+                    <div class="font-bold">Practical 4</div>
+                    <div class="toggle-status text-sm" id="status-p4">OPEN</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <div class="flex justify-between items-center" style="margin-bottom: 10px;">
+                <h3 style="font-size: 1rem;">Department Access</h3>
+                <div class="flex gap-2">
+                    <button class="btn btn-sm btn-outline" onclick="Actions.toggleAllDepts(true)">Allow All</button>
+                    <button class="btn btn-sm btn-outline" onclick="Actions.toggleAllDepts(false)">Block All</button>
+                </div>
+            </div>
+            <div class="controls-grid" id="dept-access-controls" style="max-height: 250px;"></div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-box"><div class="stat-value" id="totalStudents">0</div><div class="stat-label">Total Students</div></div>
+            <div class="stat-box"><div class="stat-value" id="p1Count">0</div><div class="stat-label">Prac 1</div></div>
+            <div class="stat-box"><div class="stat-value" id="p2Count">0</div><div class="stat-label">Prac 2</div></div>
+            <div class="stat-box"><div class="stat-value" id="p3Count">0</div><div class="stat-label">Prac 3</div></div>
+            <div class="stat-box"><div class="stat-value" id="p4Count">0</div><div class="stat-label">Prac 4</div></div>
+        </div>
+
+        <!-- Admin Filters -->
+        <div style="background: #F8FAFC; padding: 16px; border-radius: var(--radius-sm); margin-top: 24px;">
+            <h3 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase;">Filter & Sort Records</h3>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+                <input type="text" id="adminSearch" placeholder="Search Name/Matric..." oninput="Debounce.renderDashboard('admin')">
+                <select id="adminDept" onchange="Actions.renderDashboard('admin')"><option value="all">All Depts</option></select>
+                <select id="adminSession" onchange="Actions.renderDashboard('admin')">
+                    <option value="all">All Sessions</option>
+                    <option value="1">Practical 1</option>
+                    <option value="2">Practical 2</option>
+                    <option value="3">Practical 3</option>
+                    <option value="4">Practical 4</option>
+                </select>
+                <select id="adminVerifier" onchange="Actions.renderDashboard('admin')">
+                    <option value="all">All Verifiers</option>
+                    <option value="Ubaidu">Ubaidu</option>
+                    <option value="Ibrahim">Ibrahim</option>
+                    <option value="Abdulmalik">Abdulmalik</option>
+                    <option value="Chief Technologist">Chief Tech</option>
+                </select>
+                <select id="adminSort" onchange="Actions.renderDashboard('admin')">
+                    <option value="time">Latest Time</option>
+                    <option value="dept">Department</option>
+                    <option value="matric">Matric Number</option>
+                    <option value="session">Practical No.</option>
+                    <option value="verifier">Verifier Name</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Main Table -->
+        <div class="table-container">
+            <table id="monitorTable">
+                <thead>
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Matric No.</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Session</th>
+                        <th>Verified By</th>
+                        <th>Status</th>
+                        <th>Remove</th>
+                    </tr>
+                </thead>
+                <tbody class="attendanceTableBody"></tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- MODALS -->
+<div id="adminModal" class="modal-overlay">
+    <div class="modal-box">
+        <span class="modal-icon">🔒</span>
+        <h3>Chief Technologist Access</h3>
+        <p class="text-sm text-muted" style="margin-bottom: 20px;">Enter password to access controls.</p>
+        <input type="password" id="adminPasswordInput" placeholder="Password" style="text-align:center; margin-bottom: 20px;">
+        <div class="flex gap-2">
+            <button class="btn btn-outline" onclick="Modals.close('adminModal')">Cancel</button>
+            <button class="btn btn-primary" onclick="Auth.verifyAdmin()">Login</button>
+        </div>
+    </div>
+</div>
+
+<div id="subAdminModal" class="modal-overlay">
+    <div class="modal-box">
+        <span class="modal-icon">👤</span>
+        <h3>Assistant Login</h3>
+        <p class="text-sm text-muted" style="margin-bottom: 20px;">Select your profile and enter password.</p>
+        <select id="subAdminUser" style="margin-bottom: 16px;"></select>
+        <input type="password" id="subAdminPass" placeholder="Password" style="text-align:center; margin-bottom: 20px;">
+        <div class="flex gap-2">
+            <button class="btn btn-outline" onclick="Modals.close('subAdminModal')">Cancel</button>
+            <button class="btn btn-secondary" onclick="Auth.verifySubAdmin()">Login</button>
+        </div>
+    </div>
+</div>
+
+<div id="resetModal" class="modal-overlay">
+    <div class="modal-box">
+        <span class="modal-icon">🔑</span>
+        <h3>Reset Password</h3>
+        
+        <div id="resetStep1">
+            <p class="text-sm text-muted" style="margin-bottom: 16px; text-align: left;">Enter your email to receive a verification code.</p>
+            <input type="email" id="resetEmail" value="isah@sazu.edu.ng" placeholder="Email Address" style="margin-bottom: 16px;">
+            <button class="btn btn-primary" onclick="Actions.sendVerificationCode()">Send Verification Code</button>
+            <button class="btn btn-link" style="margin-top: 10px;" onclick="Modals.close('resetModal')">Cancel</button>
+        </div>
+        
+        <div id="resetStep2" class="hidden">
+            <p class="text-sm text-muted" style="margin-bottom: 10px;">Code sent to <strong id="displayEmail"></strong>. <br><em>(Code will appear on screen)</em></p>
+            <input type="text" id="verifyCodeInput" placeholder="6-digit Code" style="text-align: center; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px;">
+            <input type="password" id="newPasswordInput" placeholder="New Password" style="margin-bottom: 10px;">
+            <input type="password" id="confirmNewPasswordInput" placeholder="Confirm Password" style="margin-bottom: 16px;">
+            <button class="btn btn-primary" onclick="Actions.confirmPasswordReset()">Update Password</button>
+            <button class="btn btn-link" style="margin-top: 10px;" onclick="Actions.openResetModal()">Back</button>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// --- CONFIGURATION ---
+const firebaseConfig = {
+  apiKey: "AIzaSyAEQueJo1paOWG2iFma-5j2JQ-oKGwm8Xo",
+  authDomain: "labtrack--1.firebaseapp.com",
+  projectId: "labtrack--1",
+  storageBucket: "labtrack--1.firebasestorage.app",
+  messagingSenderId: "818313016420",
+  appId: "1:818313016420:web:e7d5eed3e1548b032e9b71",
+  databaseURL: "https://labtrack--1-default-rtdb.firebaseio.com"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// --- GLOBAL STATE ---
+const State = {
+    ADMIN_EMAIL: "isah@sazu.edu.ng",
+    ALL_DEPARTMENTS: ["Agric", "Chemistry", "Physics", "Botany", "Biochemistry", "Microbiology", "Zoology", "SLT", "Pharmacy", "Pharmacology", "Anatomy", "Physiology", "Environmental", "Public Health", "BioEdu", "ChemEdu", "Physics Edu", "Computer Science", "Statistics"],
+    defaultSubAdmins: { "ubaidu": { name: "Ubaidu", password: "Ubaidu123", active: true }, "ibrahim": { name: "Ibrahim", password: "Ibrahim123", active: true }, "abdulmalik": { name: "Abdulmalik", password: "Abdulmalik123", active: true } },
+    defaultSettings: { sessionStatus: { 1: true, 2: false, 3: false, 4: false }, allowedDepts: {} },
+    
+    // Runtime State
+    adminPassword: 'yuguda19',
+    isAdminLoggedIn: false,
+    isSubAdminLoggedIn: false,
+    currentSubAdminUser: null,
+    currentVerificationCode: null,
+    allAttendanceData: {},
+    cachedSubAdmins: {},
+    currentSessionStatus: {},
+    currentAllowedDepts: {}
+};
+
+// Initialize defaults
+State.ALL_DEPARTMENTS.forEach(d => State.defaultSettings.allowedDepts[d] = true);
+
+// --- UTILITIES ---
+const Utils = {
+    escapeHtml: (unsafe) => {
+        if (typeof unsafe !== 'string') return unsafe;
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    },
+    showToast: (message, type = 'info') => {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = message;
+        container.appendChild(toast);
+        // Remove after 4 seconds
+        setTimeout(() => { 
+            toast.style.opacity = '0'; 
+            setTimeout(() => toast.remove(), 300); 
+        }, 4000);
+    },
+    debounce: (func, wait) => {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+};
+
+// --- UI RENDERERS ---
+const UI = {
+    hideLoader: () => {
+        const loader = document.getElementById('loader-overlay');
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 500);
+    },
+    
+    renderDashboardTable: (viewType) => {
+        const isAdmin = viewType === 'admin';
+        const tbody = document.querySelector(`#${isAdmin ? 'monitor' : 'subadmin'}Table tbody`);
+        if (!tbody) return;
+
+        // IDs
+        const idMap = {
+            search: isAdmin ? 'adminSearch' : 'subAdminSearch',
+            dept: isAdmin ? 'adminDept' : 'subAdminDept',
+            session: isAdmin ? 'adminSession' : 'subAdminSession',
+            sort: isAdmin ? 'adminSort' : null,
+            verifier: isAdmin ? 'adminVerifier' : null
+        };
+
+        // Get Values
+        const searchVal = document.getElementById(idMap.search)?.value.toLowerCase() || "";
+        const filterDept = document.getElementById(idMap.dept)?.value || "all";
+        const filterSession = document.getElementById(idMap.session)?.value || "all";
+        const sortBy = document.getElementById(idMap.sort)?.value || "time";
+        const filterVerifier = isAdmin ? (document.getElementById(idMap.verifier)?.value || "all") : "all";
+
+        // Process Data
+        if (!State.allAttendanceData || Object.keys(State.allAttendanceData).length === 0) {
+            // Updated Colspan to 8 for Admin (added remove column)
+            tbody.innerHTML = `<tr><td colspan="${isAdmin ? 8 : 6}" style="text-align:center; padding: 30px; color: var(--text-muted);">No records found.</td></tr>`;
+            return;
+        }
+
+        let records = Object.entries(State.allAttendanceData).map(([key, val]) => ({ key, ...val }));
+
+        // Filter
+        records = records.filter(r => {
+            const matchesSearch = (r.name?.toLowerCase().includes(searchVal) || r.id?.toLowerCase().includes(searchVal));
+            const matchesDept = filterDept === "all" || r.department === filterDept;
+            const matchesSession = filterSession === "all" || r.session == filterSession;
+            const matchesVerifier = isAdmin ? (filterVerifier === "all" || r.markedBy === filterVerifier) : true;
+            return matchesSearch && matchesDept && matchesSession && matchesVerifier;
+        });
+
+        // Sort
+        records.sort((a, b) => {
+            if (sortBy === "dept") return a.department.localeCompare(b.department);
+            if (sortBy === "matric") return a.id.localeCompare(b.id);
+            if (sortBy === "session") return a.session - b.session;
+            if (sortBy === "time") return new Date(b.timestamp) - new Date(a.timestamp);
+            if (sortBy === "verifier") return (a.markedBy || "").localeCompare(b.markedBy || "");
+            return 0;
+        });
+
+        // Render Rows
+        tbody.innerHTML = '';
+        records.forEach(r => {
+            const isPresent = r.status === 'present';
+            const row = document.createElement('tr');
+            
+            // Safe Rendering
+            const safeId = Utils.escapeHtml(r.id);
+            const safeName = Utils.escapeHtml(r.name);
+            const safeDept = Utils.escapeHtml(r.department);
+            const safeTime = Utils.escapeHtml(r.timestamp);
+            const safeMarkedBy = Utils.escapeHtml(r.markedBy || 'Pending...');
+
+            let cols = `
+                <td>${safeTime}</td>
+                <td><strong>${safeId}</strong></td>
+                <td>${safeName}</td>
+                <td>${safeDept}</td>
+                <td><span style="background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px; font-size:0.75rem; font-weight:bold;">P${r.session}</span></td>
+            `;
+
+            if (isAdmin) {
+                cols += `<td style="font-size:0.85rem;">${safeMarkedBy}</td>`;
+            }
+
+            // Status / Action Cell
+            const btnColor = isPresent ? 'var(--danger)' : 'var(--primary)';
+            const btnText = isPresent ? 'Mark Absent' : 'Mark Present';
+            
+            cols += `
+                <td>
+                    <button onclick="Actions.toggleStatus('${r.key}', '${isPresent ? 'absent' : 'present'}')"
+                        style="background:${isPresent ? '#fee2e2' : '#d1fae5'}; color:${isPresent ? '#991b1b' : '#065f46'}; 
+                        border:1px solid currentColor; padding:6px 12px; border-radius:4px; font-weight:600; cursor:pointer; font-size:0.8rem; display:inline-flex; align-items:center; gap:6px; transition:var(--transition);">
+                        ${isPresent ? '✕' : '✓'} ${btnText}
+                    </button>
+                </td>
+            `;
+
+            // Admin Only: Delete Button
+            if (isAdmin) {
+                cols += `
+                <td style="text-align:center;">
+                    <button onclick="Actions.deleteStudentRecord('${r.key}')" title="Delete Record" 
+                        style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1.2rem; padding:4px; border-radius:4px;" 
+                        onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">
+                        🗑️
+                    </button>
+                </td>`;
+            }
+            
+            row.innerHTML = cols;
+            tbody.appendChild(row);
+        });
+    },
+
+    updateStats: (data) => {
+        if(!data) return;
+        const records = Object.values(data);
+        document.getElementById('totalStudents').textContent = [...new Set(records.map(i => i.id))].length;
+        for(let i=1; i<=4; i++) {
+            const el = document.getElementById(`p${i}Count`);
+            if(el) el.textContent = records.filter(r => r.session === i).length;
+        }
+    },
+
+    renderControls: () => {
+        // Session Toggles
+        for (let i = 1; i <= 4; i++) {
+            const card = document.getElementById(`toggle-p${i}`);
+            const status = document.getElementById(`status-p${i}`);
+            const isOpen = State.currentSessionStatus[i];
+            if (card) {
+                card.className = `toggle-card ${isOpen ? 'active' : 'inactive'}`;
+                if(status) status.textContent = isOpen ? "OPEN" : "CLOSED";
+            }
+        }
+
+        // Dept Controls
+        const container = document.getElementById('dept-access-controls');
+        container.innerHTML = '';
+        State.ALL_DEPARTMENTS.forEach(d => {
+            const isAllowed = State.currentAllowedDepts[d];
+            const card = document.createElement('div');
+            card.className = `toggle-card ${isAllowed ? 'active' : 'inactive'}`;
+            card.onclick = () => Actions.toggleDept(d);
+            card.innerHTML = `<div style="font-weight:bold; font-size:0.9rem;">${d}</div><div class="text-sm" style="margin-top:4px;">${isAllowed ? 'Allowed' : 'Blocked'}</div>`;
+            container.appendChild(card);
+        });
+    },
+
+    populateStudentDeptSelect: () => {
+        const select = document.getElementById('department');
+        const error = document.getElementById('dept-error');
+        select.innerHTML = '<option value="" disabled selected>Select Department</option>';
+        
+        let hasAllowed = false;
+        State.ALL_DEPARTMENTS.forEach(d => {
+            if (State.currentAllowedDepts[d]) {
+                hasAllowed = true;
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                select.appendChild(opt);
+            }
+        });
+
+        if (!hasAllowed) {
+            error.classList.remove('hidden');
+            select.disabled = true;
+        } else {
+            error.classList.add('hidden');
+            select.disabled = false;
+        }
+
+        // Update Session Radios
+        for(let i=1; i<=4; i++) {
+            const radio = document.getElementById(`p${i}`);
+            const label = radio.nextElementSibling;
+            if(State.currentSessionStatus[i]) {
+                radio.disabled = false;
+                label.style.opacity = '1';
+            } else {
+                radio.disabled = true;
+                label.style.opacity = '0.5';
+                if(radio.checked) radio.checked = false;
+            }
+        }
+    },
+
+    populateAdminFilterDropdowns: () => {
+        const adminSelect = document.getElementById('adminDept');
+        const subSelect = document.getElementById('subAdminDept');
+
+        [adminSelect, subSelect].forEach(select => {
+            if(!select) return;
+            // Keep first option ("All...")
+            const firstOption = select.firstElementChild;
+            select.innerHTML = '';
+            select.appendChild(firstOption);
+
+            State.ALL_DEPARTMENTS.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                select.appendChild(opt);
+            });
+        });
+    },
+
+    renderSubAdminList: () => {
+        const container = document.getElementById('subadmin-list');
+        container.innerHTML = '';
+        ['ubaidu', 'ibrahim', 'abdulmalik'].forEach(id => {
+            const admin = State.cachedSubAdmins[id];
+            const displayName = admin ? admin.name : id.charAt(0).toUpperCase() + id.slice(1);
+            const isActive = admin ? admin.active : false;
+            
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.style.padding = '12px';
+            div.innerHTML = `
+                <div>
+                    <strong style="color:var(--secondary);">${displayName}</strong>
+                    <div style="font-size:0.75rem; color:var(--text-muted);">Access Control</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" onchange="Actions.toggleSubAdmin('${id}')" ${isActive ? 'checked' : ''}>
+                    <span class="slider"></span>
+                </label>
+            `;
+            container.appendChild(div);
+        });
+    },
+
+    renderSubmissions: (data) => {
+        const container = document.getElementById('submissions-list');
+        container.innerHTML = '<p style="color:var(--text-muted); font-style:italic; font-size:0.9rem; text-align:center;">No reports yet.</p>';
+        
+        if (data && Object.keys(data).length) {
+            container.innerHTML = '';
+            Object.values(data).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp)).forEach(sub => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <div>
+                        <strong style="color:var(--primary);">${Utils.escapeHtml(sub.subAdminName)}</strong> 
+                        <span style="font-size:0.8rem; color:var(--text-muted);">submitted report</span>
+                    </div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${Utils.escapeHtml(sub.timestamp)}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+    }
+};
+
+// --- ACTIONS (Exposed to Window) ---
+const Actions = {
+    switchTab: (role) => {
+        // Auth Guards
+        if (role === 'monitor') {
+            State.isAdminLoggedIn ? Modals.openTab(role) : Modals.open('adminModal');
+        } else if (role === 'subadmin') {
+            State.isSubAdminLoggedIn ? Modals.openTab(role) : Modals.open('subAdminModal');
+        } else {
+            Modals.openTab(role);
+        }
+    },
+
+    renderDashboard: UI.renderDashboardTable,
+
+    // NEW: Delete Single Record
+    deleteStudentRecord: (key) => {
+        if(confirm("Are you sure you want to permanently delete this student's record?")) {
+            remove(ref(db, `attendance/${key}`))
+                .then(() => Utils.showToast("Record deleted successfully.", "success"))
+                .catch((err) => Utils.showToast("Error deleting record: " + err.message, "error"));
+        }
+    },
+
+    submitAttendance: () => {
+        const idInput = document.getElementById('studentID');
+        const nameInput = document.getElementById('studentName');
+        const deptSelect = document.getElementById('department');
+        
+        const id = idInput.value.trim();
+        const name = nameInput.value.trim();
+        const dept = deptSelect.value;
+
+        // Regex: Letters/Slash/Numbers/Slash/Numbers
+        const matricRegex = /^[A-Za-z]{2,}\/\d{2}\/\d{4,}$/;
+        if (!matricRegex.test(id)) return Utils.showToast("Invalid Matric Format (e.g., Anau/25/0001)", "error");
+
+        let selectedSession = null;
+        document.getElementsByName('practicalNum').forEach(r => { if(r.checked) selectedSession = parseInt(r.value); });
+
+        if (!id || !name || !dept || !selectedSession) return Utils.showToast("Please fill all fields.", "error");
+        if (!State.currentSessionStatus[selectedSession]) return Utils.showToast(`Practical ${selectedSession} is currently closed.`, "error");
+
+        // Duplicate Check
+        const hasAttended = Object.values(State.allAttendanceData).some(r => 
+            r.id.toLowerCase() === id.toLowerCase() && r.session === selectedSession
+        );
+
+        if (hasAttended) return Utils.showToast("Attendance already recorded for this session.", "error");
+
+        const record = { 
+            id, name, department: dept, session: selectedSession, 
+            status: null, markedBy: null, timestamp: new Date().toLocaleString() 
+        };
+
+        push(ref(db, 'attendance'), record)
+            .then(() => {
+                Utils.showToast("Success! Wait for verification.", "success");
+                idInput.value = ''; 
+                nameInput.value = ''; 
+                deptSelect.value = '';
+                document.querySelector('input[name="practicalNum"]:checked').checked = false;
+            })
+            .catch((err) => Utils.showToast("Error: " + err.message, "error"));
+    },
+
+    toggleStatus: (key, newStatus) => {
+        const updateData = { status: newStatus };
+        if (newStatus === 'present') {
+            updateData.markedBy = State.isSubAdminLoggedIn ? State.currentSubAdminUser : 'Chief Technologist';
+            updateData.markedAt = new Date().toLocaleString();
+        } else {
+            updateData.markedBy = null;
+            updateData.markedAt = null;
+        }
+        update(ref(db, `attendance/${key}`), updateData)
+            .then(() => Utils.showToast(`Marked as ${newStatus.toUpperCase()}`, 'info'));
+    },
+
+    toggleSession: (id) => {
+        const newStatus = !State.currentSessionStatus[id];
+        State.currentSessionStatus[id] = newStatus;
+        UI.renderControls();
+        UI.populateStudentDeptSelect();
+        set(ref(db, `settings/sessionStatus/${id}`), newStatus);
+    },
+
+    toggleDept: (deptName) => {
+        State.currentAllowedDepts[deptName] = !State.currentAllowedDepts[deptName];
+        UI.renderControls();
+        UI.populateStudentDeptSelect();
+        set(ref(db, `settings/allowedDepts/${deptName}`), State.currentAllowedDepts[deptName]);
+    },
+
+    toggleAllDepts: (selectAll) => {
+        State.ALL_DEPARTMENTS.forEach(d => { State.currentAllowedDepts[d] = selectAll; });
+        UI.renderControls();
+        UI.populateStudentDeptSelect();
+        set(ref(db, 'settings/allowedDepts'), State.currentAllowedDepts);
+    },
+
+    toggleSubAdmin: (id) => {
+        const isActive = document.getElementById(`switch-${id}`).checked === true;
+        update(ref(db, `subAdmins/${id}`), { active: isActive });
+        Utils.showToast(`User ${isActive ? 'Enabled' : 'Disabled'}`, 'info');
+    },
+
+    submitReport: () => {
+        if (!State.currentSubAdminUser) return;
+        const reportData = { 
+            subAdminName: State.currentSubAdminUser, 
+            timestamp: new Date().toLocaleString(), 
+            details: "Final verification submitted" 
+        };
+        push(ref(db, 'submissions'), reportData)
+            .then(() => Utils.showToast("Report submitted successfully", "success"));
+    },
+
+    updateNotice: () => {
+        const text = document.getElementById('adminNoticeInput').value;
+        set(ref(db, 'notice'), text);
+        Utils.showToast("Notice board updated", "success");
+    },
+
+    openResetModal: () => {
+        Modals.open('resetModal');
+        document.getElementById('resetStep1').classList.remove('hidden');
+        document.getElementById('resetStep2').classList.add('hidden');
+        document.getElementById('resetEmail').value = State.ADMIN_EMAIL;
+        document.getElementById('newPasswordInput').value = '';
+        document.getElementById('confirmNewPasswordInput').value = '';
+    },
+
+    sendVerificationCode: () => {
+        const email = document.getElementById('resetEmail').value;
+        if (!email) return Utils.showToast("Enter email.", "error");
+        
+        State.currentVerificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        setTimeout(() => {
+            document.getElementById('resetStep1').classList.add('hidden');
+            document.getElementById('resetStep2').classList.remove('hidden');
+            document.getElementById('displayEmail').textContent = email;
+            Utils.showToast(`Code: <strong>${State.currentVerificationCode}</strong>`, 'info');
+        }, 800);
+    },
+
+    confirmPasswordReset: () => {
+        const code = document.getElementById('verifyCodeInput').value;
+        const newPass = document.getElementById('newPasswordInput').value;
+        const confirmPass = document.getElementById('confirmNewPasswordInput').value;
+
+        if (code !== State.currentVerificationCode) return Utils.showToast("Invalid verification code.", "error");
+        if (newPass.length < 4) return Utils.showToast("Password too short.", "error");
+        if (newPass !== confirmPass) return Utils.showToast("Passwords do not match.", "error");
+
+        set(ref(db, 'adminPassword'), newPass);
+        State.adminPassword = newPass;
+        Utils.showToast("Password updated successfully.", "success");
+        Modals.close('resetModal');
+    },
+
+    downloadCSV: () => {
+        const tableId = State.isAdminLoggedIn ? "monitorTable" : "subadminTable";
+        const table = document.getElementById(tableId);
+        if(!table) return;
+
+        // Updated columns for Admin (includes Remove column, so we skip the last col in CSV)
+        let csv = "Date Time,Matric No,Name,Department,Session,Status,Verified By\r\n";
+        table.querySelectorAll("tbody tr").forEach(row => {
+            if(row.innerText.includes('No records')) return;
+            const cols = row.querySelectorAll("td");
+            let rowData = [];
+            // Loop up to length - 1 because we don't want to export the Trash Button column
+            const limit = State.isAdminLoggedIn ? cols.length - 1 : cols.length;
+            for(let i=0; i<limit; i++) {
+                rowData.push('"' + cols[i].innerText.replace(/"/g, '""') + '"');
+            }
+            csv += rowData.join(",") + "\r\n";
+        });
+
+        const link = document.createElement("a");
+        link.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+        link.download = State.isAdminLoggedIn ? "labtrack_admin_report.csv" : "labtrack_verification.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    },
+
+    clearData: () => {
+        if(confirm("Are you sure? This will delete ALL attendance records permanently.")) {
+            remove(ref(db, 'attendance')).then(() => Utils.showToast("Database cleared.", "success"));
+        }
+    }
+};
+
+// Expose Debounce wrapper for search inputs
+window.Debounce = {
+    renderDashboard: Utils.debounce((view) => Actions.renderDashboard(view), 400)
+};
+
+// Expose Actions for HTML onclick handlers
+window.Actions = Actions;
+
+// --- AUTHENTICATION ---
+const Auth = {
+    verifyAdmin: () => {
+        const input = document.getElementById('adminPasswordInput').value;
+        if (input === State.adminPassword) {
+            State.isAdminLoggedIn = true;
+            Modals.close('adminModal');
+            Modals.openTab('monitor');
+            Utils.showToast('Welcome, Chief Technologist', 'success');
+        } else {
+            Utils.showToast('Incorrect Password', 'error');
+        }
+    },
+
+    verifySubAdmin: () => {
+        const username = document.getElementById('subAdminUser').value;
+        const password = document.getElementById('subAdminPass').value;
+        const adminData = State.cachedSubAdmins[username];
+
+        if (!adminData) { Utils.showToast("User profile not found.", "error"); return; }
+        if (adminData.password === password) {
+            if (!adminData.active) { Utils.showToast("Account is currently disabled by Admin.", "error"); return; }
+            
+            State.isSubAdminLoggedIn = true;
+            State.currentSubAdminUser = adminData.name;
+            Modals.close('subAdminModal');
+            Modals.openTab('subadmin');
+            Utils.showToast(`Welcome, ${adminData.name}`, 'success');
+        } else {
+            Utils.showToast("Invalid Credentials", "error");
+        }
+    }
+};
+window.Auth = Auth; // Expose
+
+// --- MODALS ---
+const Modals = {
+    open: (id) => {
+        document.getElementById(id).classList.add('open');
+        if(id === 'subAdminModal') {
+            // Populate SubAdmin Dropdown
+            const select = document.getElementById('subAdminUser');
+            select.innerHTML = '<option value="" disabled selected>Select Assistant</option>';
+            ['ubaidu', 'ibrahim', 'abdulmalik'].forEach(u => {
+                const name = State.cachedSubAdmins[u]?.name || u.charAt(0).toUpperCase() + u.slice(1);
+                const opt = document.createElement('option');
+                opt.value = u;
+                opt.textContent = name;
+                select.appendChild(opt);
+            });
+        }
+    },
+    close: (id) => {
+        document.getElementById(id).classList.remove('open');
+    },
+    openTab: (role) => {
+        ['student-view', 'monitor-view', 'subadmin-view'].forEach(id => document.getElementById(id).classList.add('hidden'));
+        ['tab-student', 'tab-monitor', 'tab-subadmin'].forEach(id => document.getElementById(id).classList.remove('active'));
+        
+        if (role === 'student') {
+            document.getElementById('student-view').classList.remove('hidden');
+            document.getElementById('tab-student').classList.add('active');
+        } else if (role === 'subadmin') {
+            document.getElementById('subadmin-view').classList.remove('hidden');
+            document.getElementById('tab-subadmin').classList.add('active');
+            UI.populateStudentDeptSelect(); // Refresh dropdowns
+            UI.populateAdminFilterDropdowns(); // Fix for Microbiology dropdown
+            Actions.renderDashboard('subadmin');
+        } else {
+            document.getElementById('monitor-view').classList.remove('hidden');
+            document.getElementById('tab-monitor').classList.add('active');
+            UI.populateAdminFilterDropdowns(); // Fix for Microbiology dropdown
+            UI.renderSubAdminList(State.cachedSubAdmins);
+            Actions.renderDashboard('admin');
+        }
+    }
+};
+window.Modals = Modals; // Expose for Cancel buttons
+
+// --- DATABASE LISTENERS ---
+onValue(ref(db, 'subAdmins'), (snap) => {
+    const data = snap.val();
+    if (!data) {
+        set(ref(db, 'subAdmins'), State.defaultSubAdmins);
+        State.cachedSubAdmins = State.defaultSubAdmins;
+    } else {
+        State.cachedSubAdmins = data;
+    }
+    if(State.isAdminLoggedIn) UI.renderSubAdminList(State.cachedSubAdmins);
+});
+
+onValue(ref(db, 'submissions'), (snap) => UI.renderSubmissions(snap.val()));
+
+onValue(ref(db, 'attendance'), (snap) => {
+    const data = snap.val();
+    State.allAttendanceData = data || {};
+    if(State.isAdminLoggedIn) Actions.renderDashboard('admin');
+    if(State.isSubAdminLoggedIn) Actions.renderDashboard('subadmin');
+    UI.updateStats(State.allAttendanceData);
+});
+
+onValue(ref(db, 'settings'), (snap) => {
+    const data = snap.val();
+    if (data) {
+        State.currentSessionStatus = data.sessionStatus;
+        State.currentAllowedDepts = data.allowedDepts || {};
+    } else {
+        set(ref(db, 'settings'), State.defaultSettings);
+        State.currentSessionStatus = State.defaultSettings.sessionStatus;
+        State.currentAllowedDepts = State.defaultSettings.allowedDepts;
+    }
+    UI.renderControls();
+    UI.populateStudentDeptSelect();
+});
+
+onValue(ref(db, 'notice'), (snap) => {
+    const val = snap.val();
+    const box = document.getElementById('student-notice-display');
+    const input = document.getElementById('adminNoticeInput');
+    
+    if (val) {
+        document.getElementById('notice-text').textContent = val;
+        box.classList.remove('hidden');
+        if(input) input.value = val;
+    } else {
+        box.classList.add('hidden');
+    }
+});
+
+// --- INITIALIZATION ---
+// Hide loader once initial listeners are attached (simulated short delay for smooth UI)
+setTimeout(UI.hideLoader, 800);
+
+</script>
+</body>
+</html>
